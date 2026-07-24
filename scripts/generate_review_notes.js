@@ -207,9 +207,71 @@ function week2() {
   ];
 }
 
+// ====== WEEK 3 ======
+
+function week3() {
+  return [
+    new Paragraph({ children: [new PageBreak()] }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { after: 80 },
+      children: [new TextRun({ text: "第3周 RFM用户分层", font: FONT, size: 30, bold: true, color: BLUE })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { after: 280 },
+      children: [new TextRun({ text: "面试复习笔记", font: FONT, size: 20, color: "777777" })]
+    }),
+
+    h2("一、本周完成清单"),
+    bullet("RFM三值计算: R=最近购买距今天数, F=购买次数, M=购买商品种类数 (nunique)"),
+    bullet("按中位数打分: R<=2天=1分, F>=2次=1分, M>=2种=1分"),
+    bullet("8种用户类型划分: 三个分数拼标签 → map字典 → 实际出现6种"),
+    bullet("RFM散点气泡图 + 分层占比饼图"),
+    bullet("重要价值用户 vs 一般挽留用户 Top10类目对比 (7/10重合)"),
+    bullet("Notebook: 03_rfm_analysis.ipynb"),
+    bullet("src/rfm.py 模块 (calc_rfm / get_segment_counts / plot_rfm_scatter / plot_rfm_pie)"),
+
+    h2("二、面试问答: RFM核心概念"),
+    qaTable([
+      ["「什么是RFM? 为什么用它?」", "R=最近一次购买(越小越好), F=购买频率(越高越好), M=消费金额(无金额,用nunique商品种类替代)。三维各打分, 2³=8种类型, 支持针对性运营: 重要价值用户重点维护, 一般挽留用户发优惠券激活。"],
+      ["「你们有6种类型, 缺了2种?」", "缺了重要保持(101)和一般保持(001), 需要F_score=0且M_score=1, 即买得少但种类多。数据集里无此模式, 不是代码Bug, 是真实分布。有金额后可能缓解。"],
+      ["「你们没有金额, M怎么算的?」", "使用nunique(item_id)购买商品种类数替代总消费金额。局限性: 买一个高价商品(如手机)会被低估。业务有真实金额时替换即可, RFM框架不变。"],
+      ["「重要价值 vs 一般挽留用户有什么区别?」", "Top10品类高度重合(7/10), 说明买的东西差不多。区别在频率和数量: 重要价值用户单类目购买量是挽留用户的7-10倍。策略: 对挽留用户发品类优惠券。"],
+    ]),
+
+    h2("三、面试问答: 技术实现"),
+    qaTable([
+      ["「agg三个值怎么同时算的?」", "buy_df.groupby('user_id').agg(last_date=('date','max'), F=('item_id','count'), M=('item_id','nunique'))。一次agg同时算三个指标, 生成新的DataFrame。"],
+      ["「为什么用merge不用直接赋值?」", "buy_df(100,126行)和rfm(33,286行)行数不同, 直接赋值索引不对齐会错位。merge(on='user_id')按主键精确匹配, 等价SQL INNER JOIN。"],
+      ["「散点图四维信息怎么看?」", "X轴R(左=好), Y轴F(上=好), 气泡大小=M, 颜色=用户类型。左上大泡泡 = 三好用户(重要价值), 右下小泡泡 = 需挽留用户。"],
+    ]),
+
+    h2("四、本周必须掌握的技术概念"),
+    h3("1. RFM模型三段论"),
+    body("① 算R/F/M三值 (groupby agg: count/nunique/max) → ② 按中位数切分打分 (注意R方向与F/M相反) → ③ 拼三维标签映射用户名 (map字典)。"),
+    body("这是数据分析最常用的用户分层框架, 面试几乎必问。讲得清楚这三步 = 你做过真正的用户分析。"),
+    highlight("[关键词] RFM | 用户分层 | 精细化运营 | 中位数切分"),
+
+    h3("2. merge = SQL JOIN"),
+    body("merge(on='user_id') 等价于 SQL INNER JOIN ON user_id。how='inner'只保留两边都有的行; how='left'保留左表全部; how='outer'保留全部。"),
+    body("经典场景: 购买记录表 + 用户分层表 → 给每条购买记录打上用户类型标签, 然后对比不同用户群的品类偏好。"),
+    highlight("[关键词] merge | JOIN | how=inner/left/outer | on"),
+
+    h3("3. 数据局限性要主动承认"),
+    body("本项目三个已知限制: ① 数据是2017年的(不影响方法论演示); ② M用购买种类代替金额(有真实金额替换即可); ③ 类目ID是脱敏数字(真实业务有映射表关联成中文名)。"),
+    body("面试主动说限制 = 你思考过数据的边界 = 比90%候选人强。不是所有分析都完美, 关键是你知道哪里不完美。"),
+    highlight("[关键词] 数据局限性 | 主动承认 | 方法论 vs 具体数字"),
+
+    h2("五、本周产出物清单"),
+    bullet("src/rfm.py — RFM模块 (calc_rfm / get_segment_counts / plot_rfm_scatter / plot_rfm_pie)"),
+    bullet("03_rfm_analysis.ipynb — RFM分析完整探索过程"),
+    bullet("关键结论: 33,286人有购买行为; 重要价值用户占42.8%(14,234人); 一般挽留用户21.0%(6,999人)"),
+    bullet("散点气泡图 + 分层饼图 + Top10类目对比"),
+  ];
+}
+
 // ====== BUILD DOCUMENT ======
 
-var sections = week1().concat(week2());
+var sections = week1().concat(week2()).concat(week3());
 
 var doc = new Document({
   styles: { default: { document: { run: { font: FONT, size: 22 } } } },
@@ -245,7 +307,7 @@ var doc = new Document({
       }),
       new Paragraph({
         alignment: AlignmentType.CENTER, spacing: { after: 400 },
-        children: [new TextRun({ text: "面试复习笔记 (第1-2周)", font: FONT, size: 22, color: "777777" })]
+        children: [new TextRun({ text: "面试复习笔记 (第1-3周)", font: FONT, size: 22, color: "777777" })]
       }),
     ].concat(sections),
   }],
